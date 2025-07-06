@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"task_managing/internal/models"
 	"time"
@@ -24,34 +25,33 @@ func (t *IOBoundTask) Run(ctx context.Context) error {
 	defer func() {
 		if t.Error() != nil {
 			t.SetStatus(models.StatusFailed)
+			logrus.Errorf("Задача %s провалилась: %v", t.ID(), t.Error())
 		} else {
 			t.SetStatus(models.StatusCompleted)
+			logrus.Infof("Задача %s выполнилась", t.ID())
 		}
 	}()
 
-	duration := time.Duration(rand.Intn(3) + 3)
-	done := make(chan bool)
-
-	go func() {
-		defer close(done)
-
-		time.Sleep(duration)
-
-		if rand.Intn(10) < 1 { // 10% шанс ошибки
-			err := fmt.Errorf("ошибка во время выполнения задачи")
-			t.SetError(err)
-			return
-		}
-
-		result := fmt.Sprintf("Задача выполненв успешно. Описание: %s", t.Description())
-		t.SetResult(result)
-	}()
+	duration := 4 * time.Minute
 
 	select {
-	case <-done:
-		return t.Error()
+	case <-time.After(duration):
+		if rand.Intn(10) < 1 { // 10% шанс ошибки
+			err := fmt.Errorf("симитированная ошибка во время выполнения задачи")
+			t.SetError(err)
+			t.SetEndedAt(time.Now())
+			return err
+		}
+
+		result := "Задача выполнена успешно"
+		t.SetResult(result)
+		t.SetEndedAt(time.Now())
+		return nil
+
 	case <-ctx.Done():
-		t.SetError(fmt.Errorf("задача удалена"))
+		t.SetError(fmt.Errorf("задача отменена"))
+		t.SetStatus(models.StatusFailed)
+		t.SetEndedAt(time.Now())
 		return ctx.Err()
 	}
 }

@@ -13,6 +13,7 @@ type Task interface {
 	ID() string
 	Status() models.Status
 	CreatedAt() time.Time
+	EndedAt() time.Time
 	Run(ctx context.Context) error
 	Result() interface{}
 	Description() string
@@ -20,6 +21,8 @@ type Task interface {
 	SetStatus(status models.Status)
 	SetResult(result interface{})
 	SetError(err error)
+	SetCreatedAt(time time.Time)
+	SetEndedAt(time time.Time)
 }
 
 type TaskInfo struct {
@@ -43,6 +46,7 @@ func (tm *TaskManager) CreateTask(description string) string {
 	defer tm.mu.Unlock()
 
 	task := NewIOBoundTask(description)
+	task.SetResult("")
 	ctx, cancel := context.WithCancel(context.Background())
 	taskInfo := TaskInfo{
 		task,
@@ -52,7 +56,7 @@ func (tm *TaskManager) CreateTask(description string) string {
 
 	go func() {
 		if err := task.Run(ctx); err != nil {
-			logrus.Errorf("Задача %s провалилась: %v", task.ID(), err)
+			logrus.Errorf("Задача %s завершена с ошибкой: %v", task.ID(), err)
 		}
 	}()
 

@@ -42,6 +42,10 @@ func (t *BaseTask) CreatedAt() time.Time {
 	return t.createdAt
 }
 
+func (t *BaseTask) EndedAt() time.Time {
+	return t.endedAt
+}
+
 func (t *BaseTask) Result() interface{} {
 	return t.result
 }
@@ -67,4 +71,12 @@ func (t *BaseTask) SetError(err error) {
 
 func (t *BaseTask) Description() string {
 	return t.description
+}
+
+func (t *BaseTask) SetCreatedAt(time time.Time) {
+	t.createdAt = time
+}
+
+func (t *BaseTask) SetEndedAt(time time.Time) {
+	t.endedAt = time
 }
