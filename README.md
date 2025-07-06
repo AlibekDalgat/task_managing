@@ -66,3 +66,13 @@ curl --location --request DELETE 'localhost:8080/api/61b75227-8517-49eb-9323-3a0
     "status": "Задача удалена"
 }
 ```
+
+# Запуск
+Скачивание зависимостей
+```
+go mod tidy
+```
+Запуск приложения
+```
+go run cmd/main.go
+```
